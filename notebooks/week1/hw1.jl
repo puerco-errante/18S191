@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.21
+# v0.14.7
 
 using Markdown
 using InteractiveUtils
@@ -12,11 +12,6 @@ macro bind(def, element)
         el
     end
 end
-
-# ╔═╡ 29dfe3d6-c353-4081-8192-b12f374bf702
-filter!(LOAD_PATH) do path
-	path != "@v#.#"
-end;
 
 # ╔═╡ 65780f00-ed6b-11ea-1ecf-8b35523a7ac0
 begin
@@ -33,6 +28,11 @@ begin
 	using PlutoUI
 	using HypertextLiteral
 end
+
+# ╔═╡ 29dfe3d6-c353-4081-8192-b12f374bf702
+filter!(LOAD_PATH) do path
+	path != "@v#.#"
+end;
 
 # ╔═╡ ac8ff080-ed61-11ea-3650-d9df06123e1f
 md"""

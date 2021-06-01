@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.14.0
+# v0.14.7
 
 using Markdown
 using InteractiveUtils
@@ -101,7 +101,7 @@ Let's create a vector `v` of random numbers of length `n=100`.
 """
 
 # ╔═╡ 7fcd6230-ee09-11ea-314f-a542d00d582e
-n = 60
+n = 100
 
 # ╔═╡ 7fdb34dc-ee09-11ea-366b-ffe10d1aa845
 v = rand(n)
@@ -136,8 +136,8 @@ A better solution is to use the *closest* value that is inside the vector. Effec
 
 # ╔═╡ 802bec56-ee09-11ea-043e-51cf1db02a34
 function extend(v::AbstractVector, i)
-	
-	return missing
+	ll=length(v)
+	return i<1 ? v[1] : (i>ll ? v[ll] : v[i])
 end
 
 # ╔═╡ b7f3994c-ee1b-11ea-211a-d144db8eafc2
@@ -168,7 +168,7 @@ md"""
 # ╔═╡ 5fdc5d0d-a52c-476e-b3b5-3b6364b706e4
 function mean(v)
 	
-	return missing
+	return sum(x for x in v)/length(v)
 end
 
 # ╔═╡ e84c9cc2-e6e1-46f1-bf4e-9605da5e6f4a
@@ -179,31 +179,6 @@ md"""
 Return a vector of the same size as `v`.
 """
 
-# ╔═╡ 807e5662-ee09-11ea-3005-21fdcc36b023
-function box_blur(v::AbstractArray, l)
-	
-	return missing
-end
-
-# ╔═╡ 4f08ebe8-b781-4a32-a218-5ecd8338561d
-colored_line(box_blur(example_vector, 1))
-
-# ╔═╡ 808deca8-ee09-11ea-0ee3-1586fa1ce282
-let
-	try
-		test_v = rand(n)
-		original = copy(test_v)
-		box_blur(test_v, 5)
-		if test_v != original
-			md"""
-			!!! danger "Oopsie!"
-			    It looks like your function _modifies_ `v`. Can you write it without doing so? Maybe you can use `copy`.
-			"""
-		end
-	catch
-	end
-end
-
 # ╔═╡ 809f5330-ee09-11ea-0e5b-415044b6ac1f
 md"""
 #### Exercise 1.4
@@ -211,13 +186,18 @@ md"""
 """
 
 # ╔═╡ e555a7e6-f11a-43ac-8218-6d832f0ce251
+let
 
+	range = 1:10
+	md"""
+	
+	l $(@bind l_box Slider(range; default=1, show_value=true))
+
+	"""
+end
 
 # ╔═╡ 302f0842-453f-47bd-a74c-7942d8c96485
-
-
-# ╔═╡ 7d80a1ea-a0a9-41b2-9cfe-a334717ab2f4
-
+colored_line(v)
 
 # ╔═╡ 80ab64f4-ee09-11ea-29b4-498112ed0799
 md"""
@@ -235,12 +215,6 @@ Again, we need to take care about what happens if $v_{i -m }$ falls off the end 
    You will either need to do the necessary manipulation of indices by hand, or use the `OffsetArrays.jl` package.
 """
 
-# ╔═╡ 28e20950-ee0c-11ea-0e0a-b5f2e570b56e
-function convolve(v::AbstractVector, k)
-	
-	return missing
-end
-
 # ╔═╡ cf73f9f8-ee12-11ea-39ae-0107e9107ef5
 md"_Edit the cell above, or create a new cell with your own test cases!_"
 
@@ -253,8 +227,8 @@ md"""
 
 # ╔═╡ 8a7d3cfd-6f19-43f0-ae16-d5a236f148e7
 function box_blur_kernel(l)
-	
-	return missing
+	n=2l+1
+	return [1/n for _ in 1:n]
 end
 
 # ╔═╡ a34d1ad8-3776-4bc4-93e5-72cfffc54f15
@@ -267,12 +241,6 @@ box_blur_kernel_test = box_blur_kernel(box_kernel_l)
 md"""
 Let's apply your kernel to our test vector `v` (first cell), and compare the result to our previous box blur function (second cell). The two should be identical.
 """
-
-# ╔═╡ bbe1a562-8d97-4112-a88a-c45c260f574d
-let
-	result = box_blur(v, box_kernel_l)
-	colored_line(result)
-end
 
 # ╔═╡ 03f91a22-1c3e-4c42-9d78-1ee36851a120
 md"""
@@ -299,15 +267,6 @@ md"""
 We need to **sample** (i.e. evaluate) this at each pixel in an interval of length $2n+1$,
 and then **normalize** so that the sum of the resulting kernel is 1.
 """
-
-# ╔═╡ 1c8b4658-ee0c-11ea-2ede-9b9ed7d3125e
-function gaussian_kernel_1D(n; σ = 1)
-	
-	return missing
-end
-
-# ╔═╡ a6149507-d5ba-45c1-896a-3487070d36ec
-colored_line(gaussian_kernel_1D(4; σ=1))
 
 # ╔═╡ f8bd22b8-ee14-11ea-04aa-ab16fd01826e
 md"""
@@ -353,8 +312,24 @@ md"""
 
 # ╔═╡ 7c2ec6c6-ee15-11ea-2d7d-0d9401a5e5d1
 function extend(M::AbstractMatrix, i, j)
+	num_rows, num_columns = size(M)
 	
-	return missing
+	if i < 1
+		ii = 1
+	elseif i > num_rows
+		ii = num_rows
+	else
+	    ii = i
+	end
+	
+	if j < 1
+		jj = 1
+	elseif j > num_columns
+		jj = num_columns
+	else
+	    jj = j
+	end
+	return M[ii,jj]
 end
 
 # ╔═╡ 803905b2-ee09-11ea-2d52-e77ff79693b0
@@ -371,6 +346,46 @@ if extend(v,1) === missing
 	missing
 else
 	colored_line([extend(example_vector, i) for i in -1:length(example_vector)+2])
+end
+
+# ╔═╡ 807e5662-ee09-11ea-3005-21fdcc36b023
+function box_blur(v::AbstractArray, l)
+	
+	return [mean([extend(v,j) for j in i-l:i+l]) for i in 1:length(v)]
+end
+
+# ╔═╡ 4f08ebe8-b781-4a32-a218-5ecd8338561d
+colored_line(box_blur(example_vector, 1))
+
+# ╔═╡ 808deca8-ee09-11ea-0ee3-1586fa1ce282
+let
+	try
+		test_v = rand(n)
+		original = copy(test_v)
+		box_blur(test_v, 5)
+		if test_v != original
+			md"""
+			!!! danger "Oopsie!"
+			    It looks like your function _modifies_ `v`. Can you write it without doing so? Maybe you can use `copy`.
+			"""
+		end
+	catch
+	end
+end
+
+# ╔═╡ 7d80a1ea-a0a9-41b2-9cfe-a334717ab2f4
+colored_line(box_blur(v,l_box))
+
+# ╔═╡ bbe1a562-8d97-4112-a88a-c45c260f574d
+let
+	result = box_blur(v, box_kernel_l)
+	colored_line(result)
+end
+
+# ╔═╡ 28e20950-ee0c-11ea-0e0a-b5f2e570b56e
+function convolve(v::AbstractVector, k)
+	l=(length(k)-1)÷2
+	return [sum([extend(v,j)*k[j-(i-l)+1] for j in i-l:i+l]) for i in 1:length(v)]
 end
 
 # ╔═╡ 9afc4dca-ee16-11ea-354f-1d827aaa61d2
@@ -424,16 +439,23 @@ md"""
 👉 Implement a new method `convolve(M, K)` that applies a convolution to a 2D array `M`, using a 2D kernel `K`. Use your new method `extend` from the last exercise.
 """
 
+# ╔═╡ 1e579305-8847-480c-934c-5f5fe69a41d9
+[(a,b) for a in 1:3 for b in 4:5]
+
 # ╔═╡ 8b96e0bc-ee15-11ea-11cd-cfecea7075a0
 function convolve(M::AbstractMatrix, K::AbstractMatrix)
-	
-	return missing
+	(li,lj) = (size(K) .-1) .÷ 2
+	return [
+	sum(extend(M, i+ii, j+jj)*K[ii+1+li,jj+1+li] for ii in -li:li for jj in -lj:lj  ) for 
+		i in 1:size(M,1),
+		j in 1:size(M,2)
+]
 end
 
 # ╔═╡ 93284f92-ee12-11ea-0342-833b1a30625c
 test_convolution = let
 	v = [1, 10, 100, 1000, 10000]
-	k = [1, 1, 0]
+	k = [1, 1, 0,0,1]
 	convolve(v, k)
 end
 
@@ -446,31 +468,6 @@ let
 	colored_line(result)
 end
 
-# ╔═╡ 38eb92f6-ee13-11ea-14d7-a503ac04302e
-test_gauss_1D_a = let
-	k = gaussian_kernel_1D(gaussian_kernel_size_1D)
-	
-	if k !== missing
-		convolve(v, k)
-	end
-end
-
-# ╔═╡ b424e2aa-ee14-11ea-33fa-35491e0b9c9d
-colored_line(test_gauss_1D_a)
-
-# ╔═╡ 24c21c7c-ee14-11ea-1512-677980db1288
-test_gauss_1D_b = let
-	v = create_bar()
-	k = gaussian_kernel_1D(gaussian_kernel_size_1D)
-	
-	if k !== missing
-		convolve(v, k)
-	end
-end
-
-# ╔═╡ bc1c20a4-ee14-11ea-3525-63c9fa78f089
-colored_line(test_gauss_1D_b)
-
 # ╔═╡ 5a5135c6-ee1e-11ea-05dc-eb0c683c2ce5
 md"_Let's test it out! 🎃_"
 
@@ -479,9 +476,9 @@ test_image_with_border = [get(small_image, (i, j), Gray(0)) for (i,j) in Iterato
 
 # ╔═╡ 275a99c8-ee1e-11ea-0a76-93e3618c9588
 K_test = [
-	0   0  0
+	0.3   0  1
 	1/2 0  1/2
-	0   0  0
+	0   0  0.7
 ]
 
 # ╔═╡ 42dfa206-ee1e-11ea-1fcd-21671042064c
@@ -515,15 +512,65 @@ How can you express this mathematically using the 1D Gaussian function that we d
 # ╔═╡ f4d9fd6f-0f1b-4dec-ae68-e61550cee790
 gauss(x, y; σ=1) = 2π*σ^2 * gauss(x; σ=σ) * gauss(y; σ=σ)
 
+# ╔═╡ 616dc009-d40b-47d4-96d4-580f7da82b7f
+gauss(0,1)
+
+# ╔═╡ 1c8b4658-ee0c-11ea-2ede-9b9ed7d3125e
+function gaussian_kernel_1D(n; σ = 1)
+	vec=[gauss(x, σ) for x in -n:n]
+	return vec./sum(vec)
+end
+
+# ╔═╡ a6149507-d5ba-45c1-896a-3487070d36ec
+colored_line(gaussian_kernel_1D(5; σ=.2))
+
+# ╔═╡ 38eb92f6-ee13-11ea-14d7-a503ac04302e
+test_gauss_1D_a = let
+	k = gaussian_kernel_1D(gaussian_kernel_size_1D)
+	
+	if k !== missing
+		convolve(v, k)
+	end
+end
+
+# ╔═╡ b424e2aa-ee14-11ea-33fa-35491e0b9c9d
+colored_line(test_gauss_1D_a)
+
+# ╔═╡ 24c21c7c-ee14-11ea-1512-677980db1288
+test_gauss_1D_b = let
+	v = create_bar()
+	k = gaussian_kernel_1D(gaussian_kernel_size_1D)
+	
+	if k !== missing
+		convolve(v, k)
+	end
+end
+
+# ╔═╡ bc1c20a4-ee14-11ea-3525-63c9fa78f089
+colored_line(test_gauss_1D_b)
+
 # ╔═╡ 7c50ea80-ee15-11ea-328f-6b4e4ff20b7e
 md"""
 👉 Write a function that applies a **Gaussian blur** to an image. Use your previous functions, and add cells to write helper functions as needed!
 """
 
+# ╔═╡ d750c9e3-8b35-46a0-98a6-0d5f4774b672
+function gaussian_kernel(σ, l)
+	output = [
+		gauss(x, y; σ) for 
+			x in -l:l, 
+		    y in -l:l
+			]
+	return output/sum(output)
+end
+
+# ╔═╡ 9442fae9-1330-454a-bef0-4c96841538fd
+gaussian_kernel(3,3)
+
 # ╔═╡ aad67fd0-ee15-11ea-00d4-274ec3cda3a3
 function with_gaussian_blur(image; σ=3, l=5)
-	
-	return missing
+	KG=gaussian_kernel(σ, l)
+	return convolve(image, KG)
 end
 
 # ╔═╡ 8ae59674-ee18-11ea-3815-f50713d0fa08
@@ -572,10 +619,19 @@ where each operation applies *element-wise* on the matrices.
 Use your previous functions, and add cells to write helper functions as needed!
 """
 
+# ╔═╡ e02a5f9d-41ae-4199-b099-5e57422482fd
+begin
+Gx=[ 1 0 -1 
+	2 0 -2
+	1 0 -1];
+Gy=transpose(Gx);
+	Gtot=sqrt.(Gx.^2 + Gy.^2)
+end
+
 # ╔═╡ 9eeb876c-ee15-11ea-1794-d3ea79f47b75
 function with_sobel_edge_detect(image)
 	
-	return missing
+	return convolve(image, Gtot)
 end
 
 # ╔═╡ 8ffe16ce-ee20-11ea-18bd-15640f94b839
@@ -1089,6 +1145,7 @@ Gray.(with_sobel_edge_detect(sobel_camera_image))
 # ╟─48530f0d-49b4-4aec-8109-d69f1ef7f0ee
 # ╠═beb62fda-38a6-4528-a176-cfb726f4b5bd
 # ╟─f0d55cec-2e81-4cbb-b166-2cf4f2a0f43f
+# ╠═616dc009-d40b-47d4-96d4-580f7da82b7f
 # ╠═1c8b4658-ee0c-11ea-2ede-9b9ed7d3125e
 # ╟─f0c3e99d-9eb9-459e-917a-c2338af6683c
 # ╠═a6149507-d5ba-45c1-896a-3487070d36ec
@@ -1119,6 +1176,7 @@ Gray.(with_sobel_edge_detect(sobel_camera_image))
 # ╠═84a48984-9adb-40ab-a1f1-1ab7b76c9a19
 # ╠═3cd535e4-ee26-11ea-2482-fb4ad43dda19
 # ╟─7c41f0ca-ee15-11ea-05fb-d97a836659af
+# ╠═1e579305-8847-480c-934c-5f5fe69a41d9
 # ╠═8b96e0bc-ee15-11ea-11cd-cfecea7075a0
 # ╟─0cabed84-ee1e-11ea-11c1-7d8a4b4ad1af
 # ╟─5a5135c6-ee1e-11ea-05dc-eb0c683c2ce5
@@ -1131,6 +1189,8 @@ Gray.(with_sobel_edge_detect(sobel_camera_image))
 # ╟─79eb0775-3582-446b-996a-0b64301394d0
 # ╠═f4d9fd6f-0f1b-4dec-ae68-e61550cee790
 # ╟─7c50ea80-ee15-11ea-328f-6b4e4ff20b7e
+# ╠═d750c9e3-8b35-46a0-98a6-0d5f4774b672
+# ╠═9442fae9-1330-454a-bef0-4c96841538fd
 # ╠═aad67fd0-ee15-11ea-00d4-274ec3cda3a3
 # ╟─9def5f32-ee15-11ea-1f74-f7e6690f2efa
 # ╟─8ae59674-ee18-11ea-3815-f50713d0fa08
@@ -1141,6 +1201,7 @@ Gray.(with_sobel_edge_detect(sobel_camera_image))
 # ╟─d5ffc6ab-156b-4d43-ac3d-1947d0176e7f
 # ╟─f461f5f2-ee18-11ea-3d03-95f57f9bf09e
 # ╟─7c6642a6-ee15-11ea-0526-a1aac4286cdd
+# ╠═e02a5f9d-41ae-4199-b099-5e57422482fd
 # ╠═9eeb876c-ee15-11ea-1794-d3ea79f47b75
 # ╠═1a0324de-ee19-11ea-1d4d-db37f4136ad3
 # ╠═1bf94c00-ee19-11ea-0e3c-e12bc68d8e28
