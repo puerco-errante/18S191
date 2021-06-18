@@ -460,7 +460,7 @@ You should use **anonymous functions** for this. These have the form `x -> x^2`,
 # ╔═╡ bd8522c6-12e8-11eb-306c-c764f78486ef
 function ∂x(f::Function, a, b)
 	
-	return missing
+	return finite_difference_slope(x->f(x,b),a)
 end
 
 # ╔═╡ 321964ac-126d-11eb-0a04-0d3e3fb9b17c
@@ -472,7 +472,7 @@ end
 # ╔═╡ b7d3aa8c-12e8-11eb-3430-ff5d7df6a122
 function ∂y(f::Function, a, b)
 	
-	return missing
+	return finite_difference_slope(x->f(a,x),b)
 end
 
 # ╔═╡ a15509ee-126c-11eb-1fa3-cdda55a47fcb
@@ -490,7 +490,7 @@ md"""
 # ╔═╡ adbf65fe-12e8-11eb-04e9-3d763ba91a63
 function gradient(f::Function, a, b)
 	
-	return missing
+	return [∂x(f, a, b),∂y(f, a, b)]
 end
 
 # ╔═╡ 66b8e15e-126c-11eb-095e-39c2f6abc81d
@@ -518,7 +518,7 @@ We want to minimize a 1D function, i.e. a function $f: \mathbb{R} \to \mathbb{R}
 # ╔═╡ a7f1829c-12e8-11eb-15a1-5de40ed92587
 function gradient_descent_1d_step(f, x0; η=0.01)
 	
-	return missing
+	return x0 - η * finite_difference_slope(f,x0)
 end
 
 # ╔═╡ d33271a2-12df-11eb-172a-bd5600265f49
@@ -571,8 +571,11 @@ md"""
 
 # ╔═╡ 9489009a-12e8-11eb-2fb7-97ba0bdf339c
 function gradient_descent_1d(f, x0; η=0.01, N_steps=1000)
-	
-	return missing
+	x=x0
+	for _ in 1:N_steps
+		x = gradient_descent_1d_step(f,x)
+	end
+	return x
 end
 
 # ╔═╡ 34dc4b02-1248-11eb-26b2-5d2610cfeb41
@@ -589,7 +592,7 @@ Right now we take a fixed number of steps, even if the minimum is found quickly.
 
 # ╔═╡ ebca11d8-12c9-11eb-3dde-c546eccf40fc
 better_stopping_idea = md"""
-_your answer here_
+Tolerance <3
 """
 
 # ╔═╡ 9fd2956a-1248-11eb-266d-f558cda55702
@@ -603,14 +606,17 @@ Multivariable calculus tells us that the gradient $\nabla f(a, b)$ at a point $(
 # ╔═╡ 852be3c4-12e8-11eb-1bbb-5fbc0da74567
 function gradient_descent_2d_step(f, x0, y0; η=0.01)
 	
-	return missing
+	return [x0 , y0] - η * gradient(f,x0,y0)
 end
 
-# ╔═╡ 8a114ca8-12e8-11eb-2de6-9149d1d3bc3d
-function gradient_descent_2d(f, x0, y0; η=0.01)
-	
-	return missing
-end
+# ╔═╡ 4aa90954-a7b9-453b-8827-05ebab377e39
+gradient_descent_2d_step(
+	(x, y) -> 7x^2 + y, 
+	3, 7, η= 0.1
+)
+
+# ╔═╡ 951726f2-e8f5-476b-8170-5f88d5e76f36
+norm2(x,y)=x^2+y^2
 
 # ╔═╡ 4454c2b2-12e3-11eb-012c-c362c4676bf6
 @bind N_gradient_2d Slider(0:20)
@@ -623,9 +629,6 @@ md" ``y_0 = `` $(@bind y0_gradient_2d Slider(-4:.01:4, default=0, show_value=tru
 
 # ╔═╡ a0045046-1248-11eb-13bd-8b8ad861b29a
 himmelbau(x, y) = (x^2 + y - 11)^2 + (x + y^2 - 7)^2
-
-# ╔═╡ 92854562-1249-11eb-0b81-156982df1284
-gradient_descent_2d(himmelbau, 0, 0)
 
 # ╔═╡ 7e318fea-12e7-11eb-3490-b17e0d4dbc50
 md"""
@@ -777,10 +780,13 @@ What we just did was adjusting the function parameters until we found the best p
 $$\mathcal{L}(\mu, \sigma) := \sum_i [f_{\mu, \sigma}(x_i) - y_i]^2$$
 """
 
+# ╔═╡ 46cf132a-988e-4084-bf49-4e016cbfbae0
+zip(dice_x,dice_y)
+
 # ╔═╡ 2fc55daa-124f-11eb-399e-659e59148ef5
 function loss_dice(μ, σ)
 	
-	return missing
+	return sum( (gauss(x, μ, σ) - y)^2 for (x,y) in zip(dice_x,dice_y))
 end
 
 # ╔═╡ 3a6ec2e4-124f-11eb-0f68-791475bab5cd
@@ -792,27 +798,6 @@ md"""
 👉 Use your `gradient_descent_2d` function to find a local minimum of $\mathcal{L}$, starting with initial values $\mu = 30$ and $\sigma = 1$. Call the found parameters `found_μ` and `found_σ`.
 """
 
-# ╔═╡ a150fd60-124f-11eb-35d6-85104bcfd0fe
-found_μ, found_σ = let
-	
-	# your code here
-	
-	missing, missing
-end
-
-# ╔═╡ ac320522-124b-11eb-1552-51c2adaf2521
-let
-	p = plot(dice_x, dice_y, size=(600,200), label="data")
-	if show_manual_fit
-		plot!(p, dice_x, gauss.(dice_x, [guess_μ], [guess_σ]), label="manual fit")
-	end
-	try
-		plot!(p, dice_x, gauss.(dice_x, [found_μ], [found_σ]), label="optimized fit")
-	catch
-	end
-	p
-end
-
 # ╔═╡ 3f5e88bc-12c8-11eb-2d74-51f2f5060928
 md"""
 Go back to the graph to see your optimized gaussian curve!
@@ -823,14 +808,8 @@ If your fit is close, then probability theory tells us that the found parameter 
 # ╔═╡ 65aa13fe-1266-11eb-03c2-5927dbeca36e
 stats_μ = sum(dice_x .* dice_y)
 
-# ╔═╡ c569a5d8-1267-11eb-392f-452de141161b
-abs(stats_μ - found_μ)
-
 # ╔═╡ 6faf4074-1266-11eb-1a0a-991fc2e991bb
 stats_σ = sqrt(sum(dice_x.^2 .* dice_y) - stats_μ .^ 2)
-
-# ╔═╡ e55d9c1e-1267-11eb-1b3c-5d772662518a
-abs(stats_σ - found_σ)
 
 # ╔═╡ 826bb0dc-106e-11eb-29eb-03e7ddf9e4b5
 md"""
@@ -881,10 +860,55 @@ This time, instead of comparing two vectors of numbers, we need to compare two v
 
 """
 
+# ╔═╡ 3439f95c-0723-45a8-8474-c26dd7f03723
+norm2(xs::Vector) = sum(x^2 for x in xs)
+
+# ╔═╡ 8a114ca8-12e8-11eb-2de6-9149d1d3bc3d
+function gradient_descent_2d(f, x0, y0; η=0.01, tol=1e-7)
+	x,y=x0,y0
+	while norm2(gradient(f,x,y)...) > tol
+		println(x,y)
+		x, y = gradient_descent_2d_step(f, x, y; η)
+	end
+	return x,y
+end
+
+# ╔═╡ 92854562-1249-11eb-0b81-156982df1284
+gradient_descent_2d(himmelbau, -3, 0)
+
+# ╔═╡ a150fd60-124f-11eb-35d6-85104bcfd0fe
+found_μ, found_σ = let
+	gradient_descent_2d(loss_dice, 30, 1)
+end
+
+# ╔═╡ ac320522-124b-11eb-1552-51c2adaf2521
+let
+	p = plot(dice_x, dice_y, size=(600,200), label="data")
+	if show_manual_fit
+		plot!(p, dice_x, gauss.(dice_x, [guess_μ], [guess_σ]), label="manual fit")
+	end
+	try
+		plot!(p, dice_x, gauss.(dice_x, [found_μ], [found_σ]), label="optimized fit")
+	catch
+	end
+	p
+end
+
+# ╔═╡ c569a5d8-1267-11eb-392f-452de141161b
+abs(stats_μ - found_μ)
+
+# ╔═╡ e55d9c1e-1267-11eb-1b3c-5d772662518a
+abs(stats_σ - found_σ)
+
+# ╔═╡ 2cafb073-9016-4b3d-9505-9070f5427cbb
+norm2([3,3,4])
+
 # ╔═╡ 754b5368-12e8-11eb-0763-e3ec56562c5f
 function loss_sir(β, γ)
-	
-	return missing
+	sirs = euler_SIR(β, γ, 
+	spatial_results[1], 
+	spatial_T)
+	return sum( norm2(sir - spatial) for (sir, spatial) in zip(sirs,spatial_results))
 end
 
 # ╔═╡ ee20199a-12d4-11eb-1c2c-3f571bbb232e
@@ -898,9 +922,7 @@ md"""
 # ╔═╡ 6e1b5b6a-12e8-11eb-3655-fb10c4566cdc
 found_β, found_γ = let
 	
-	# your code here
-	
-	missing, missing
+	gradient_descent_2d(loss_sir, 0.02, 0.0018, η =0.000000001,tol = 1e-3)
 end
 
 # ╔═╡ 496b8816-12d3-11eb-3cec-c777ba81eb60
@@ -1298,10 +1320,12 @@ TODO = html"<span style='display: inline; font-size: 2em; color: purple; font-we
 # ╠═ebca11d8-12c9-11eb-3dde-c546eccf40fc
 # ╟─9fd2956a-1248-11eb-266d-f558cda55702
 # ╠═852be3c4-12e8-11eb-1bbb-5fbc0da74567
+# ╠═4aa90954-a7b9-453b-8827-05ebab377e39
+# ╠═951726f2-e8f5-476b-8170-5f88d5e76f36
 # ╠═8a114ca8-12e8-11eb-2de6-9149d1d3bc3d
 # ╠═92854562-1249-11eb-0b81-156982df1284
 # ╠═4454c2b2-12e3-11eb-012c-c362c4676bf6
-# ╟─fbb4a9a4-1248-11eb-00e2-fd346f0056db
+# ╠═fbb4a9a4-1248-11eb-00e2-fd346f0056db
 # ╟─4aace1a8-12e3-11eb-3e07-b5827a2a6765
 # ╟─54a58f84-12e3-11eb-10b9-7d55a16c81ba
 # ╠═a0045046-1248-11eb-13bd-8b8ad861b29a
@@ -1323,6 +1347,7 @@ TODO = html"<span style='display: inline; font-size: 2em; color: purple; font-we
 # ╟─41b2262a-124e-11eb-2634-4385e2f3c6b6
 # ╠═0dea1f70-124c-11eb-1593-e535ab21976c
 # ╟─471cbd84-124c-11eb-356e-371d23011af5
+# ╠═46cf132a-988e-4084-bf49-4e016cbfbae0
 # ╠═2fc55daa-124f-11eb-399e-659e59148ef5
 # ╠═3a6ec2e4-124f-11eb-0f68-791475bab5cd
 # ╟─2fcb93aa-124f-11eb-10de-55fced6f4b83
@@ -1343,6 +1368,8 @@ TODO = html"<span style='display: inline; font-size: 2em; color: purple; font-we
 # ╟─a9630d28-12d2-11eb-196b-773d8498b0bb
 # ╟─23c53be4-12d4-11eb-1d39-8d11b4431993
 # ╟─6016fccc-12d4-11eb-0f58-b9cd331cc7b3
+# ╠═3439f95c-0723-45a8-8474-c26dd7f03723
+# ╠═2cafb073-9016-4b3d-9505-9070f5427cbb
 # ╠═754b5368-12e8-11eb-0763-e3ec56562c5f
 # ╠═ee20199a-12d4-11eb-1c2c-3f571bbb232e
 # ╟─38b09bd8-12d5-11eb-2f7b-579e9db3973d
