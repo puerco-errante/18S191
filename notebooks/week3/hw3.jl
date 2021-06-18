@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.14.0
+# v0.14.7
 
 using Markdown
 using InteractiveUtils
@@ -165,7 +165,7 @@ md"👉 Use `filter` to extract just the characters from our alphabet out of `me
 messy_sentence_1 = "#wow 2020 ¥500 (blingbling!)"
 
 # ╔═╡ 75694166-f998-11ea-0428-c96e1113e2a0
-cleaned_sentence_1 = missing
+cleaned_sentence_1 = filter(isinalphabet,messy_sentence_1)
 
 # ╔═╡ 05f0182c-f999-11ea-0a52-3d46c65a049e
 md"""
@@ -184,7 +184,7 @@ md"👉 Use the function `lowercase` to convert `messy_sentence_2` into a lower 
 messy_sentence_2 = "Awesome! 😍"
 
 # ╔═╡ d3a4820e-f998-11ea-2a5c-1f37e2a6dd0a
-cleaned_sentence_2 = missing
+cleaned_sentence_2 = filter(isinalphabet,lowercase(messy_sentence_2))
 
 # ╔═╡ aad659b8-f998-11ea-153e-3dae9514bfeb
 md"""
@@ -235,7 +235,7 @@ $(html"<br>")
 # ╔═╡ 4affa858-f92e-11ea-3ece-258897c37e51
 function clean(text)
 	
-	return missing
+	return filter(isinalphabet,unaccent(lowercase(text)))
 end
 
 # ╔═╡ e00d521a-f992-11ea-11e0-e9da8255b23b
@@ -281,7 +281,7 @@ $(html"<br>")
 """
 
 # ╔═╡ 92bf9fd2-f9a5-11ea-25c7-5966e44db6c6
-unused_letters = ['a', 'b', 'c'] # replace with your answer
+unused_letters = [letter for letter in alphabet if sample_freqs[index_of_letter(letter)]==0] # replace with your answer
 
 # ╔═╡ 01215e9a-f9a9-11ea-363b-67392741c8d4
 md"""
@@ -353,13 +353,13 @@ end
 md"""👉 What is the frequency of the combination `"th"`?"""
 
 # ╔═╡ 1b4c0c28-f9ab-11ea-03a6-69f69f7f90ed
-th_frequency = missing
+th_frequency = sample_freq_matrix[index_of_letter('t'),index_of_letter('h')]
 
 # ╔═╡ 1f94e0a2-f9ab-11ea-1347-7dd906ebb09d
 md"""👉 What about `"ht"`?"""
 
 # ╔═╡ 41b2df7c-f931-11ea-112e-ede3b16f357a
-ht_frequency = missing
+ht_frequency = sample_freq_matrix[index_of_letter('h'),index_of_letter('t')]
 
 # ╔═╡ 1dd1e2f4-f930-11ea-312c-5ff9e109c7f6
 md"""
@@ -367,7 +367,7 @@ md"""
 """
 
 # ╔═╡ 65c92cac-f930-11ea-20b1-6b8f45b3f262
-double_letters = ['a', 'b', 'c'] # replace with your answer
+double_letters = [letter for letter in alphabet if sample_freq_matrix[index_of_letter(letter),index_of_letter(letter)]!=0] # replace with your answer
 
 # ╔═╡ 4582ebf4-f930-11ea-03b2-bf4da1a8f8df
 md"""
@@ -377,7 +377,7 @@ _You are free to do this partially by hand, partially using code, whatever is ea
 """
 
 # ╔═╡ 7898b76a-f930-11ea-2b7e-8126ec2b8ffd
-most_likely_to_follow_w = 'x' # replace with your answer
+most_likely_to_follow_w = alphabet[argmax(sample_freq_matrix[index_of_letter('w'),:])]
 
 # ╔═╡ 458cd100-f930-11ea-24b8-41a49f6596a0
 md"""
@@ -387,7 +387,7 @@ _You are free to do this partially by hand, partially using code, whatever is ea
 """
 
 # ╔═╡ bc401bee-f931-11ea-09cc-c5efe2f11194
-most_likely_to_precede_w = 'x' # replace with your answer
+most_likely_to_precede_w = alphabet[argmax(sample_freq_matrix[:,index_of_letter('w')])]
 
 # ╔═╡ 45c20988-f930-11ea-1d12-b782d2c01c11
 md"""
@@ -395,16 +395,13 @@ md"""
 """
 
 # ╔═╡ 58428158-84ac-44e4-9b38-b991728cd98a
-row_sums = missing
+row_sums = sum(sample_freq_matrix,dims=2)
 
 # ╔═╡ 4a0314a6-7dc0-4ee9-842b-3f9bd4d61fb1
-col_sums = missing
+col_sums = sum(sample_freq_matrix,dims=1)
 
 # ╔═╡ cc62929e-f9af-11ea-06b9-439ac08dcb52
-row_col_answer = md"""
-
-Blablabla
-"""
+row_col_answer = sum(sample_freq_matrix)
 
 # ╔═╡ 2f8dedfc-fb98-11ea-23d7-2159bdb6a299
 md"""
@@ -489,7 +486,7 @@ The only question left is: How do we compare two matrices? When two matrices are
 # ╔═╡ 13c89272-f934-11ea-07fe-91b5d56dedf8
 function matrix_distance(A, B)
 
-	return missing # do something with A .- B
+	return sum(abs.(A-B)) # do something with A .- B
 end
 
 # ╔═╡ 7d60f056-f931-11ea-39ae-5fa18a955a77
@@ -599,8 +596,11 @@ ngrams([1, 2, 3, 42], 2) == bigrams([1, 2, 3, 42])
 
 # ╔═╡ 7be98e04-fb6b-11ea-111d-51c48f39a4e9
 function ngrams(words, n)
+	starting_positions = 1:length(words)-n+1
 	
-	return missing
+	map(starting_positions) do i
+		words[i:i+n-1]
+	end
 end
 
 # ╔═╡ 052f822c-fb7b-11ea-382f-af4d6c2b4fdb
@@ -643,7 +643,7 @@ Take a close look at the next example. Note that you can click on the output to 
 healthy = Dict("fruits" => ["🍎", "🍊"], "vegetables" => ["🌽", "🎃", "🍕"])
 
 # ╔═╡ c83b1770-fb82-11ea-20a6-3d3a09606c62
-healthy["fruits"]
+healthy["vegetables"]
 
 # ╔═╡ 52970ac4-fb82-11ea-3040-8bd0590348d2
 md"""
@@ -671,9 +671,13 @@ Dict(
 # ╔═╡ 8ce3b312-fb82-11ea-200c-8d5b12f03eea
 function word_counts(words::Vector)
 	counts = Dict()
-	
-	# your code here
-	
+	for word in words
+		if haskey(counts, word)
+			counts[word]+=1
+		else
+			counts[word]=1
+		end
+	end
 	return counts
 end
 
@@ -686,7 +690,7 @@ md"""
 """
 
 # ╔═╡ 953363dc-fb84-11ea-1128-ebdfaf5160ee
-emma_count = missing
+emma_count = word_counts(emma_words)["Emma"]
 
 # ╔═╡ 294b6f50-fb84-11ea-1382-03e9ab029a2d
 md"""
@@ -716,9 +720,15 @@ If the same n-gram occurs multiple times (e.g. "said Emma laughing"), then the l
 function completion_cache(grams)
 	cache = Dict()
 	
-	# your code here
+	for gram in grams
+		if haskey(cache, gram[1:end-1])
+			push!(cache[gram[1:end-1]],gram[end])
+		else
+			cache[gram[1:end-1]]=[gram[end]]
+		end
+	end
 	
-	cache
+	return cache
 end
 
 # ╔═╡ 18355314-fb86-11ea-0738-3544e2e3e816
@@ -826,9 +836,6 @@ md"""
 Uncomment the cell below to generate some Jane Austen text:
 """
 
-# ╔═╡ 49b69dc2-fb8f-11ea-39af-030b5c5053c3
-# generate(emma, 100; n=4) |> Quote
-
 # ╔═╡ cc07f576-fbf3-11ea-2c6f-0be63b9356fc
 if student.name == "Jazzy Doe"
 	md"""
@@ -880,6 +887,9 @@ generate(
 	n=generate_sample_n_words, 
 	use_words=true
 ) |> Quote
+
+# ╔═╡ 49b69dc2-fb8f-11ea-39af-030b5c5053c3
+ generate(emma, 100; n=4) |> Quote
 
 # ╔═╡ ddef9c94-fb96-11ea-1f17-f173a4ff4d89
 function compimg(img, labels=[c*d for c in replace(alphabet, ' ' => "_"), d in replace(alphabet, ' ' => "_")])
@@ -1302,11 +1312,11 @@ bigbreak
 # ╟─dcffd7d2-f9a6-11ea-2230-b1afaecfdd54
 # ╟─b3dad856-f9a7-11ea-1552-f7435f1cb605
 # ╟─01215e9a-f9a9-11ea-363b-67392741c8d4
-# ╟─be55507c-f9a7-11ea-189c-4ffe8377212e
+# ╠═be55507c-f9a7-11ea-189c-4ffe8377212e
 # ╟─8ae13cf0-f9a8-11ea-3919-a735c4ed9e7f
 # ╟─343d63c2-fb58-11ea-0cce-efe1afe070c2
-# ╟─b5b8dd18-f938-11ea-157b-53b145357fd1
-# ╟─0e872a6c-f937-11ea-125e-37958713a495
+# ╠═b5b8dd18-f938-11ea-157b-53b145357fd1
+# ╠═0e872a6c-f937-11ea-125e-37958713a495
 # ╟─77623f3e-f9a9-11ea-2f46-ff07bd27cd5f
 # ╠═fbb7c04e-f92d-11ea-0b81-0be20da242c8
 # ╠═80118bf8-f931-11ea-34f3-b7828113ffd8
@@ -1362,7 +1372,7 @@ bigbreak
 # ╟─8c7606f0-fb93-11ea-0c9c-45364892cbb8
 # ╟─82e0df62-fb54-11ea-3fff-b16c87a7d45b
 # ╠═b7601048-fb57-11ea-0754-97dc4e0623a1
-# ╟─cc42de82-fb5a-11ea-3614-25ef961729ab
+# ╠═cc42de82-fb5a-11ea-3614-25ef961729ab
 # ╠═d66fe2b2-fb5a-11ea-280f-cfb12b8296ac
 # ╠═4ca8e04a-fb75-11ea-08cc-2fdef5b31944
 # ╟─6f613cd2-fb5b-11ea-1669-cbd355677649
@@ -1392,21 +1402,21 @@ bigbreak
 # ╟─472687be-995a-4cf9-b9f6-6b56ae159539
 # ╠═abe2b862-fb69-11ea-08d9-ebd4ba3437d5
 # ╟─3d105742-fb8d-11ea-09b0-cd2e77efd15c
-# ╟─a72fcf5a-fb62-11ea-1dcc-11451d23c085
-# ╟─f83991c0-fb7c-11ea-0e6f-1f80709d00c1
-# ╟─4b27a89a-fb8d-11ea-010b-671eba69364e
+# ╠═a72fcf5a-fb62-11ea-1dcc-11451d23c085
+# ╠═f83991c0-fb7c-11ea-0e6f-1f80709d00c1
+# ╠═4b27a89a-fb8d-11ea-010b-671eba69364e
 # ╟─d7b7a14a-fb90-11ea-3e2b-2fd8f379b4d8
 # ╟─1939dbea-fb63-11ea-0bc2-2d06b2d4b26c
-# ╟─70169682-fb8c-11ea-27c0-2dad2ff3080f
+# ╠═70169682-fb8c-11ea-27c0-2dad2ff3080f
 # ╠═b5dff8b8-fb6c-11ea-10fc-37d2a9adae8c
-# ╟─402562b0-fb63-11ea-0769-375572cc47a8
-# ╟─ee8c5808-fb5f-11ea-19a1-3d58217f34dc
+# ╠═402562b0-fb63-11ea-0769-375572cc47a8
+# ╠═ee8c5808-fb5f-11ea-19a1-3d58217f34dc
 # ╟─2521bac8-fb8f-11ea-04a4-0b077d77529e
 # ╠═49b69dc2-fb8f-11ea-39af-030b5c5053c3
 # ╟─7f341c4e-fb54-11ea-1919-d5421d7a2c75
 # ╟─cc07f576-fbf3-11ea-2c6f-0be63b9356fc
 # ╟─6b4d6584-f3be-11ea-131d-e5bdefcc791b
-# ╟─54b1e236-fb53-11ea-3769-b382ef8b25d6
+# ╠═54b1e236-fb53-11ea-3769-b382ef8b25d6
 # ╟─b7803a28-fb96-11ea-3e30-d98eb322d19a
 # ╟─ddef9c94-fb96-11ea-1f17-f173a4ff4d89
 # ╟─ffc17f40-f380-11ea-30ee-0fe8563c0eb1

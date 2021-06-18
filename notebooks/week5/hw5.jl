@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.14.0
+# v0.14.7
 
 using Markdown
 using InteractiveUtils
@@ -65,7 +65,7 @@ Students used to pure math are sometimes surprised to see numbers like `1e-15`, 
 """
 
 # ╔═╡ ea28bf57-ba62-41ce-8be6-d38ca2c5caa3
-
+baddies=[j for j in 1:1000 if j*(1/j)!=1]
 
 # ╔═╡ a5901f93-007f-4a30-97fc-29b367ec47c6
 md"""
@@ -79,7 +79,7 @@ Is this an integer power of 2?  Which one? (`log2` might help.)
 """
 
 # ╔═╡ 8efcaaeb-4900-404b-ae59-65db0bde8790
-
+[x*(1/x)-1|>abs|>log2 for x in baddies]
 
 # ╔═╡ a5be0775-68de-41ce-95cd-1465723d099b
 
@@ -100,13 +100,13 @@ Caculate all of the following:
 """
 
 # ╔═╡ d221c61c-a4ab-4a82-b89d-52735d957cae
-
+32 * 23 - 736
 
 # ╔═╡ c3d49b98-a9c1-4aba-becc-7fa84f4bbc75
-
+3.2 * 23 - 73.6
 
 # ╔═╡ 7b33c09c-2ef2-4b97-b5a5-5fdf9268f76b
-
+3.2 * 2.3 - 7.36
 
 # ╔═╡ 224acb51-c0db-4f04-b865-8349d6a28e98
 md"""
@@ -148,7 +148,7 @@ md"""
 """
 
 # ╔═╡ b0db7388-850c-11eb-0915-597f1fa5ab93
-ten_twelve = missing # Your code here
+ten_twelve = FirstRankOneMatrix(1:10,1:12) # Your code here
 
 # ╔═╡ 7aac43b3-49ce-46ea-854b-d292ac0591c7
 md"""
@@ -171,7 +171,7 @@ These are built-in functions, and each function comes with a set of methods pre-
 """
 
 # ╔═╡ 7adbcbab-66e7-4b58-b197-5c220ba1e9a2
-# methods(size)
+#methods(size)
 
 # ╔═╡ 87fce3d8-765c-410c-a059-4dd51bd97254
 md"""
@@ -187,7 +187,7 @@ md"""
 # ╔═╡ fada4734-8505-11eb-3f2b-d1f1ef391ba4
 function Base.size(M::FirstRankOneMatrix)
 	
-	return missing # Your code here
+	return (length(M.v),length(M.w)) # Your code here
 end
 
 # ╔═╡ 545a5916-8506-11eb-1a31-078957d791f8
@@ -198,7 +198,7 @@ md"""
 # ╔═╡ 590dfe1a-8506-11eb-0069-d7cd91f02a65
 function Base.getindex(M::FirstRankOneMatrix, i, j)
 	
-	return missing # Your code here
+	return M.v[i] *  M.w[j]
 end
 
 # ╔═╡ b9cb6192-8505-11eb-3d2c-790654bbc9a1
@@ -229,7 +229,8 @@ One possible workaround for this is to create a new function specifically to dis
 # ╔═╡ c7a15c5e-8505-11eb-3af2-2fa84b74b590
 function print_as_matrix(M::FirstRankOneMatrix)
 	
-	# Your code here
+	m, n = size(M)
+	[println(M[i,:]) for i in 1:m]
 	
 end
 
@@ -284,13 +285,13 @@ md"""
 # ╔═╡ f2d8b45c-8501-11eb-1c6a-5f819c240d9d
 function Base.size(M::RankOneMatrix)
 	
-	return missing # Your code here
+	return (length(M.v),length(M.w))
 end
 
 # ╔═╡ ed72e880-8afa-11eb-3a4a-175a838188d9
 function Base.getindex(M::RankOneMatrix, i, j)
 	
-	return missing # Your code here
+	return M.v[i] *  M.w[j] 
 end
 
 # ╔═╡ 7b3fb0ef-9a9e-401c-8c09-e5615134a4ad
@@ -302,7 +303,7 @@ md"""
 """
 
 # ╔═╡ fc962c72-8501-11eb-2821-cbb7a52d5f61
-M = RankOneMatrix(1:10) # missing # Your code here
+M = RankOneMatrix(1:10)
 
 # ╔═╡ 8f5c7c9c-850b-11eb-3d97-bf9c6b5d7d2e
 md"""
@@ -345,7 +346,7 @@ md"""
 # ╔═╡ ee58251a-8511-11eb-074c-5b1e27c4ebd4
 function matvec(M::RankOneMatrix, x)
 	
-	return missing # Your code here
+	return (M.w⋅x)*M.v # Your code here
 end
 
 # ╔═╡ 4864e4d6-850c-11eb-210c-0318b8660a9a
@@ -390,7 +391,7 @@ md"""
 """
 
 # ╔═╡ f5a95dd8-850d-11eb-2aa7-2dcb1868577f
-
+RankTwoMatrix(1.0:10.0, 0.0:0.1:0.9)
 
 # ╔═╡ dc714540-8afa-11eb-205b-7770074771c8
 md"""
@@ -401,13 +402,13 @@ md"""
 # ╔═╡ c784e02c-8502-11eb-3efa-7f4c45f4274c
 function Base.getindex(M::RankTwoMatrix, i, j)
 
-	return missing # Your code here
+	return M.A[i,j]+ M.B[i,j]# Your code here
 end
 
 # ╔═╡ 0bab818e-8503-11eb-02b3-178098599847
 function Base.size(M::RankTwoMatrix)
 	
-	return missing # Your code here
+	return size(M.A) # Your code here
 end
 
 # ╔═╡ aca709f0-8503-11eb-1144-1fc01cb85c39
@@ -426,6 +427,7 @@ struct LowRankMatrix <: AbstractMatrix{Float64}
 	# Your code here
 	Ms::Vector{RankOneMatrix}
 	rank::Int
+	#LowRankMatrix(Ms) = new(Ms,length(Ms))
 end
 
 # ╔═╡ 6e280730-8b00-11eb-04b7-615a389e792f
@@ -437,7 +439,7 @@ md"""
 # ╔═╡ c49e350e-8503-11eb-15de-7308dd03dc08
 function Base.getindex(M::LowRankMatrix, i, j)
 	
-	return missing # Your code here
+	return sum(m[i,j] for m in M.Ms )
 end
 
 # ╔═╡ fe6df9bf-6059-4b76-af39-385d395ece72
@@ -449,7 +451,7 @@ Base.getindex(R2, 2, 3)
 # ╔═╡ dd27f508-8503-11eb-36b9-33f5f99f78b0
 function Base.size(M::LowRankMatrix)
 	
-	return missing # Your code here
+	return size(M.Ms[1]) # Your code here
 end
 
 # ╔═╡ 0b7c6cbe-57de-419d-adcb-8724791f9c89
@@ -473,7 +475,7 @@ md"""
 # ╔═╡ 3fed837a-8512-11eb-1fdd-c1b72b48d07b
 function matvec(M::LowRankMatrix, x)
 	
-	return missing # Your code here
+	return sum(matvec(m,x) for m in M.Ms )
 end
 
 # ╔═╡ 2d65bd1a-8512-11eb-1bd2-0313588dfa0e
@@ -487,9 +489,7 @@ One of the big advantages of our rank-1 matrices is its space efficiency: to "st
 # ╔═╡ f9556098-8504-11eb-08a0-39fbe00892da
 answer = md"""
 
-From rank ...
-
-Because ....
+$n^2>2nm$ fails for $m\geq n/2$
 """
 
 # ╔═╡ 295acdac-880a-402e-9f7e-19b0fc801130
@@ -509,7 +509,7 @@ The `LinearAlgebra` package defines a function `svd` that computes the decomposi
 biggie = rand(100,100)
 
 # ╔═╡ 167b9580-fa18-4248-8643-a0fde723ecc4
-svd(biggie)
+bigSVD=svd(biggie)
 
 # ╔═╡ a58c1c54-4f17-4ca4-ac78-22773b526dfb
 md"""
@@ -517,7 +517,7 @@ md"""
 """
 
 # ╔═╡ 210392ff-0a22-4e55-be08-9f58804282cf
-singular_values_of_biggie = missing
+singular_values_of_biggie = bigSVD.S
 
 # ╔═╡ bb649c89-709c-49c8-8111-53044e8e682a
 md"""
@@ -544,7 +544,9 @@ Keep things simple. Inside your method, call `LinearAlgebra.svd` on a type that 
 # ╔═╡ 6c9ae344-084e-459c-841c-8377451507fd
 function LinearAlgebra.svd(A::RankOneMatrix)
 	
-	return missing
+	m, n = size(A)
+	M = [A[i,j] for i in 1:m, j in 1:n ]
+	return LinearAlgebra.svd(M)
 end
 
 # ╔═╡ 9ae28bc5-d9cb-479d-8c22-7c9248cd5fa0
@@ -571,8 +573,8 @@ To keep things simple, you can assume that "approximately zero" means: less than
 
 # ╔═╡ a2b7f0c3-488b-4ce9-aed6-b8ccddac6a57
 function numerical_rank(A::AbstractMatrix; tol=1e-5)
-	
-	return missing
+	sings = svd(A).S
+	return sum(x>tol for x in sings)
 end
 
 # ╔═╡ d3420859-d558-47cb-aaf7-d51a5e2d1f6e
@@ -594,9 +596,12 @@ md"""
 
 # ╔═╡ 01b12200-2e7e-4f19-96b9-5b6d6cb03233
 function k_rank_ones(k, m, n)
-	
-	return missing
+	Ms = [RankOneMatrix(rand(m),rand(n)) for _ in 1:k]
+	return sum(M for M in Ms)
 end
+
+# ╔═╡ 64a52663-38e1-403a-9c69-59bfd2a0eb2c
+rand(4)
 
 # ╔═╡ e1e1067b-93ba-40df-bd09-7599538e6181
 k_rank_ones(1, 3, 3)
@@ -608,7 +613,7 @@ md"""
 """
 
 # ╔═╡ a6bb92f9-0cb2-4fdd-8b67-f286edbbdcb6
-
+numerical_rank(k_rank_ones(3, 2, 3))
 
 # ╔═╡ 57c19601-122b-414f-bc99-56f98c794e61
 
@@ -1191,7 +1196,7 @@ bigbreak
 # ╟─58ce8d2a-850c-11eb-29e9-3fc966e129b1
 # ╟─9d4d943e-8502-11eb-31cb-e11824b2dce0
 # ╠═ba3cb45a-8502-11eb-2141-6369b0e08807
-# ╟─92a91904-850c-11eb-010e-c58ae218f541
+# ╠═92a91904-850c-11eb-010e-c58ae218f541
 # ╠═f5a95dd8-850d-11eb-2aa7-2dcb1868577f
 # ╟─dc714540-8afa-11eb-205b-7770074771c8
 # ╠═c784e02c-8502-11eb-3efa-7f4c45f4274c
@@ -1238,8 +1243,9 @@ bigbreak
 # ╟─2f5eadb0-4fdb-45b6-83fd-116dd4c1f9be
 # ╟─7fdc110a-a3e3-44e5-a547-b75e03e0d21e
 # ╠═01b12200-2e7e-4f19-96b9-5b6d6cb03233
+# ╠═64a52663-38e1-403a-9c69-59bfd2a0eb2c
 # ╠═e1e1067b-93ba-40df-bd09-7599538e6181
-# ╟─1276103b-8c58-4757-ae80-5ffb7f870d09
+# ╠═1276103b-8c58-4757-ae80-5ffb7f870d09
 # ╟─00f5bea8-b808-483a-ad70-332f521481f5
 # ╠═a6bb92f9-0cb2-4fdd-8b67-f286edbbdcb6
 # ╠═57c19601-122b-414f-bc99-56f98c794e61

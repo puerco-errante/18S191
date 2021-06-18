@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.14.3
+# v0.14.7
 
 using Markdown
 using InteractiveUtils
@@ -111,7 +111,7 @@ md"""
 # ╔═╡ d217a4b6-12e8-11eb-29ce-53ae143a39cd
 function finite_difference_slope(f::Function, a, h=1e-3)
 	
-	return missing
+	return (f(a+h)-f(a))/h
 end
 
 # ╔═╡ f0576e48-1261-11eb-0579-0b1372565ca7
@@ -124,8 +124,8 @@ md"""
 
 # ╔═╡ cbf0a27a-12e8-11eb-379d-85550b942ceb
 function tangent_line(f, a, h)
-	
-	return missing
+	m = finite_difference_slope(f, a, h)
+	return x-> m*(x-a)+ f(a)
 end
 
 # ╔═╡ 2b79b698-10b9-11eb-3bde-53fc1c48d5f7
@@ -223,7 +223,7 @@ Using this formula, we only need to know the _value_ ``f(a)`` and the _slope_ ``
 function euler_integrate_step(fprime::Function, fa::Number, 
 		a::Number, h::Number)
 	
-	return missing
+	return h*fprime(a+h) + fa
 end
 
 # ╔═╡ 2335cae6-112f-11eb-3c2c-254e82014567
@@ -237,8 +237,15 @@ function euler_integrate(fprime::Function, fa::Number,
 	
 	a0 = T[1]
 	h = step(T)
+	fs = Real[]
+	ftemp = fa
+	for a in T
+		println(a)
+		ftemp = euler_integrate_step(fprime, ftemp, a, h)
+		push!(fs, ftemp)
+	end
 	
-	return missing
+	return fs
 end
 
 # ╔═╡ 4d0efa66-12c6-11eb-2027-53d34c68d5b0
@@ -257,12 +264,12 @@ euler_test = let
 end
 
 # ╔═╡ ab72fdbe-10be-11eb-3b33-eb4ab41730d6
-@bind N_euler Slider(2:40)
+@bind N_euler Slider(2:400)
 
 # ╔═╡ 990236e0-10be-11eb-333a-d3080a224d34
 let
 	a = 1
-	h = .3
+	h = .05
 	history = euler_integrate(wavy_deriv, wavy(a), range(a; step=h, length=N_euler))
 	
 	slope = wavy_deriv(a_euler)
@@ -337,9 +344,9 @@ function euler_SIR_step(β, γ, sir_0::Vector, h::Number)
 	s, i, r = sir_0
 	
 	return [
-		missing,
-		missing,
-		missing,
+		s - (h* β * s * i),
+		i + h*( β* s * i - γ * i),
+		r + (h * γ * i)
 	]
 end
 
@@ -361,15 +368,23 @@ function euler_SIR(β, γ, sir_0::Vector, T::AbstractRange)
 	h = step(T)
 	
 	num_steps = length(T)
+		
+	a0 = T[1]
+	fs = typeof(h.*sir_0)[]
+	sirtemp = sir_0
+	for a in T
+		sirtemp = euler_SIR_step(β, γ, sirtemp, h)
+		push!(fs, sirtemp)
+	end
 	
-	return missing
+	return fs
 end
 
 # ╔═╡ 4b791b76-12cd-11eb-1260-039c938f5443
 sir_T = 0 : 0.1 : 60.0
 
 # ╔═╡ 0a095a94-1245-11eb-001a-b908128532aa
-sir_results = euler_SIR(0.3, 0.15, 
+sir_results = euler_SIR(0.9, 0.05, 
 	[0.99, 0.01, 0.00], 
 	sir_T)
 
@@ -410,7 +425,18 @@ md"""
 """
 
 # ╔═╡ 68274534-1103-11eb-0d62-f1acb57721bc
+@bind β_s Slider(0.001:0.001:1)
 
+# ╔═╡ 592a0668-4750-42c7-a9de-2ea78a718325
+@bind γ_s Slider(0.001:0.001:1)
+
+# ╔═╡ fbf29eca-36f2-4912-81cc-f45b48a3749a
+sir_int = euler_SIR(β_s, γ_s, 
+	[0.99, 0.01, 0.00], 
+	sir_T)
+
+# ╔═╡ 3db1d339-ad18-4f06-8962-6f9bb596dc01
+plot_sir!(plot(), sir_T, sir_int)
 
 # ╔═╡ 82539bbe-106e-11eb-0e9e-170dfa6a7dad
 md"""
@@ -1224,7 +1250,7 @@ TODO = html"<span style='display: inline; font-size: 2em; color: purple; font-we
 # ╟─4d0efa66-12c6-11eb-2027-53d34c68d5b0
 # ╠═b74d94b8-10bf-11eb-38c1-9f39dfcb1096
 # ╟─15b50428-1264-11eb-163e-23e2f3590502
-# ╟─ab72fdbe-10be-11eb-3b33-eb4ab41730d6
+# ╠═ab72fdbe-10be-11eb-3b33-eb4ab41730d6
 # ╟─990236e0-10be-11eb-333a-d3080a224d34
 # ╟─d21fad2a-1253-11eb-304a-2bacf9064d0d
 # ╟─518fb3aa-106e-11eb-0fcd-31091a8f12db
@@ -1235,12 +1261,15 @@ TODO = html"<span style='display: inline; font-size: 2em; color: purple; font-we
 # ╠═4b791b76-12cd-11eb-1260-039c938f5443
 # ╠═0a095a94-1245-11eb-001a-b908128532aa
 # ╟─51c9a25e-1244-11eb-014f-0bcce2273cee
-# ╟─58675b3c-1245-11eb-3548-c9cb8a6b3188
-# ╟─b4bb4b3a-12ce-11eb-3fe5-ad7ccd73febb
+# ╠═58675b3c-1245-11eb-3548-c9cb8a6b3188
+# ╠═b4bb4b3a-12ce-11eb-3fe5-ad7ccd73febb
 # ╟─586d0352-1245-11eb-2504-05d0aa2352c6
 # ╟─589b2b4c-1245-11eb-1ec7-693c6bda97c4
-# ╟─58b45a0e-1245-11eb-04d1-23a1f3a0f242
+# ╠═58b45a0e-1245-11eb-04d1-23a1f3a0f242
 # ╠═68274534-1103-11eb-0d62-f1acb57721bc
+# ╠═592a0668-4750-42c7-a9de-2ea78a718325
+# ╠═fbf29eca-36f2-4912-81cc-f45b48a3749a
+# ╠═3db1d339-ad18-4f06-8962-6f9bb596dc01
 # ╟─82539bbe-106e-11eb-0e9e-170dfa6a7dad
 # ╟─b394b44e-1245-11eb-2f86-8d10113e8cfc
 # ╠═bd8522c6-12e8-11eb-306c-c764f78486ef

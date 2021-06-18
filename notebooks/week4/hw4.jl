@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.14.0
+# v0.14.7
 
 using Markdown
 using InteractiveUtils
@@ -245,11 +245,35 @@ md"""
 👉 Implement the greedy approach.
 """
 
+# ╔═╡ 82032d49-44fc-4201-88cf-520ab4f9a966
+a=missing
+
+# ╔═╡ a6ddade1-46af-4237-baac-0dd9109dce09
+a===missing
+
 # ╔═╡ abf20aa0-f31b-11ea-2548-9bea4fab4c37
 function greedy_seam(energies, starting_pixel::Int)
 	m,n = size(energies)
-	# you can delete the body of this function - it's just a placeholder.
-	random_seam(size(energies)..., starting_pixel)
+	jj=starting_pixel
+	seam = [jj]
+	bestPix = 1
+	for i in 2:m
+		print(i)
+		bestEn=missing
+		for j in max(1,jj-1):min(n,jj+1)
+			if bestEn === missing
+				bestEn = energies[i,j]
+				bestPix = j
+			elseif energies[i,j] < bestEn
+				bestEn = energies[i,j]
+				bestPix = j
+			end
+		end
+		jj=bestPix
+		push!(seam,bestPix)
+	end
+    return seam
+		
 end
 
 # ╔═╡ 5430d772-f397-11ea-2ed8-03ee06d02a22
@@ -264,6 +288,9 @@ grant_example = [
 	2 4 0 2 4 5
 	2 4 2 5 3 0
 ] ./ 10
+
+# ╔═╡ e5f5e591-becf-4543-bae8-09e134f17893
+greedy_seam(grant_example,1)
 
 # ╔═╡ 6f52c1a2-f395-11ea-0c8a-138a77f03803
 md"Starting pixel: $(@bind greedy_starting_pixel Slider(1:size(grant_example, 2); show_value=true, default=5))"
@@ -344,16 +371,18 @@ function least_energy(energies, i, j)
 	m, n = size(energies)
 	
 	## base case
-	# if i == something
-	#    return (energies[...], ...) # no need for recursive computation in the base case!
-	# end
-	
+	if i == m
+	    return (energies[i,j], j)
+	end
+	below = max(1,j-1):min(n,j+1)
+	paths_below = [least_energy(energies, i+1, jj)[1] for jj in below]
+	best_below = below[argmin(paths_below)]
 	## induction
-	# combine results from recursive calls to `least_energy`.
+	return (least_energy(energies, i+1, best_below)[1] + energies[i,j], best_below )
 end
 
 # ╔═╡ ad524df7-29e2-4f0d-ad72-8ecdd57e4f02
-least_energy(grant_example, 1, 4)
+least_energy(grant_example, 1,4)
 
 # ╔═╡ 1add9afd-5ff5-451d-ad81-57b0e929dfe8
 grant_example
@@ -426,7 +455,13 @@ This will give you the method used in the lecture to perform [exhaustive search 
 function recursive_seam(energies, starting_pixel)
 	m, n = size(energies)
 	# Replace the following line with your code.
-	[rand(1:starting_pixel) for i=1:m]
+	seam = [starting_pixel]
+	jj = starting_pixel
+	for i=1:m-1
+		(x,jj) = least_energy(energies, i,jj)
+		push!(seam,jj)
+	end
+	return seam
 end
 
 # ╔═╡ f92ac3e4-fa70-4bcf-bc50-a36792a8baaa
@@ -447,7 +482,9 @@ md"""
 
 # ╔═╡ 6d993a5c-f373-11ea-0dde-c94e3bbd1552
 exhaustive_observation = md"""
-<your answer here>
+All the possible paths starting at (i,j) pass through (i+1,j-1), (i+1,j) or (i+1,j+1).  This method accounts for all the possible paths through these successive points.
+
+We have roughly $m\times 3^n$ paths.
 """
 
 # ╔═╡ ea417c2a-f373-11ea-3bb0-b1b5754f2fac
@@ -484,8 +521,16 @@ You are expected to read and understand the [documentation on dictionaries](http
 function memoized_least_energy(energies, i, j, memory::Dict)
 	m, n = size(energies)
 	
-	# you should start by copying the code from 
-	# your (not-memoized) least_energies function.
+	## base case
+	if i == m
+		memory[(i,j)] = (energies[i,j], j)
+	    return memory[(i,j)]
+	end
+	below = max(1,j-1):min(n,j+1)
+	paths_below = [(haskey(memory, (i+1,jj)) ? memory[(i+1,jj)] : memory[(i+1,jj)] = memoized_least_energy(energies, i+1, jj,memory))[1] for jj in below]
+	best_below = below[argmin(paths_below)]
+	## induction
+	return (memory[(i+1,best_below)][1] + energies[i,j], best_below )
 	
 end
 
@@ -510,11 +555,14 @@ function memoized_recursive_seam(energies, starting_pixel)
 	memory = Dict{Tuple{Int,Int},Tuple{Float64,Int}}()
 	
 	m, n = size(energies)
-	
 	# Replace the following line with your code.
-	
-	# you should start by copying the code from 
-	# your (not-memoized) recursive_seam function.
+	seam = [starting_pixel]
+	jj = starting_pixel
+	for i=1:m-1
+		(x,jj) = memoized_least_energy(energies, i,jj,memory)
+		push!(seam,jj)
+	end
+	return seam
 end
 
 # ╔═╡ d941c199-ed77-47dd-8b5a-e34b864f9a79
@@ -537,9 +585,23 @@ But in our particular case, we can use a matrix as a storage, since a matrix is 
 # ╔═╡ c8724b5e-f3bd-11ea-0034-b92af21ca12d
 function matrix_memoized_least_energy(energies, i, j, memory::Matrix)
 	m, n = size(energies)
+	if i == m
+		memory[i,j] = (energies[i,j], j)
+	    return memory[i,j]
+	end
+	below = max(1,j-1):min(n,j+1)
+	paths_below = [ (memory[i+1, jj] != nothing ) ? memory[i+1,jj] : memory[i+1,jj] = matrix_memoized_least_energy(energies, i+1, jj,memory) for jj in below]
+	best_below = below[argmin(paths_below)]
+	## induction
+	return (memory[i+1,best_below][1] + energies[i,j], best_below )
 	
-	# Replace the following line with your code.
 end
+
+# ╔═╡ fe699cc1-b1fd-49f6-bd7b-4bdc527f7d37
+aaaa=Matrix{Union{Nothing, Tuple{Float64,Int}}}(nothing, (3,3))
+
+# ╔═╡ 48c94f68-aabc-4bb6-83fc-07fa4c6f4d71
+aaaa[1,1]==nothing
 
 # ╔═╡ be7d40e2-f320-11ea-1b56-dff2a0a16e8d
 function matrix_memoized_seam(energies, starting_pixel)
@@ -550,9 +612,14 @@ function matrix_memoized_seam(energies, starting_pixel)
 	
 	
 	m, n = size(energies)
-	
-	# Replace the following line with your code.
-	[starting_pixel for i=1:m]
+# Replace the following line with your code.
+	seam = [starting_pixel]
+	jj = starting_pixel
+	for i=1:m-1
+		(x,jj) = matrix_memoized_least_energy(energies, i,jj,memory)
+		push!(seam,jj)
+	end
+	return seam
 	
 	
 end
@@ -575,19 +642,34 @@ Now it's easy to see that the above algorithm is equivalent to one that populate
 👉 Write a function which takes the energies and returns the least energy matrix which has the least possible seam energy for each pixel. This was shown in the lecture, but attempt to write it on your own.
 """
 
+# ╔═╡ 202998c7-a3ea-42e1-a9cc-dd03764bbab9
+collect(10-1:-1:1)
+
 # ╔═╡ ff055726-f320-11ea-32f6-2bf38d7dd310
 function least_energy_matrix(energies)
 	result = copy(energies)
 	m,n = size(energies)
 	
-	# your code here
-	
+	for i in m-1:-1:1
+		for j in 1:n
+			below = max(1,j-1):min(n,j+1)
+	   		paths_below = result[i+1, below] 
+			#print(paths_below)
+			#println( (i,j, result[i,j]))
+			result[i,j] =result[i,j]+ min(paths_below...)
+			#println( (i,j, result[i,j]))
+		end
+	end
+		
 	
 	return result
 end
 
 # ╔═╡ d3e69cf6-61b1-42fc-9abd-42d1ae7d61b2
 img_brightness = brightness.(img);
+
+# ╔═╡ 8d661e31-b14d-4146-b3f3-b90b1c4c67e9
+img_brightness
 
 # ╔═╡ 51731519-1831-46a3-a599-d6fc2f7e4224
 le_test = least_energy_matrix(img_brightness)
@@ -612,8 +694,15 @@ function seam_from_precomputed_least_energy(energies, starting_pixel::Int)
 	least_energies = least_energy_matrix(energies)
 	m, n = size(least_energies)
 	
-	# Replace the following line with your code.
-	[starting_pixel for i=1:m]
+	# Replace the following line with your code.	
+	seam = [starting_pixel]
+	j = starting_pixel
+	for i in 1:m-1
+			below = max(1,j-1):min(n,j+1)
+	   		paths_below = least_energies[i+1, below] 
+			push!(seam, below[argmin(paths_below)])
+	end
+	return seam
 	
 end
 
@@ -948,7 +1037,10 @@ bigbreak
 # ╟─f5a74dfc-f388-11ea-2577-b543d31576c6
 # ╟─2f9cbea8-f3a1-11ea-20c6-01fd1464a592
 # ╟─c3543ea4-f393-11ea-39c8-37747f113b96
+# ╠═82032d49-44fc-4201-88cf-520ab4f9a966
+# ╠═a6ddade1-46af-4237-baac-0dd9109dce09
 # ╠═abf20aa0-f31b-11ea-2548-9bea4fab4c37
+# ╠═e5f5e591-becf-4543-bae8-09e134f17893
 # ╟─5430d772-f397-11ea-2ed8-03ee06d02a22
 # ╟─6f52c1a2-f395-11ea-0c8a-138a77f03803
 # ╠═5057652e-2f88-40f1-82f0-55b1b5bca6f6
@@ -1002,14 +1094,18 @@ bigbreak
 # ╟─cf39fa2a-f374-11ea-0680-55817de1b837
 # ╠═c8724b5e-f3bd-11ea-0034-b92af21ca12d
 # ╟─6435994e-d470-4cf3-9f9d-d00df183873e
+# ╠═fe699cc1-b1fd-49f6-bd7b-4bdc527f7d37
+# ╠═48c94f68-aabc-4bb6-83fc-07fa4c6f4d71
 # ╠═be7d40e2-f320-11ea-1b56-dff2a0a16e8d
 # ╟─507f3870-f3c5-11ea-11f6-ada3bb087634
 # ╟─50829af6-f3c5-11ea-04a8-0535edd3b0aa
 # ╟─9e56ecfa-f3c5-11ea-2e90-3b1839d12038
 # ╟─4f48c8b8-f39d-11ea-25d2-1fab031a514f
 # ╟─24792456-f37b-11ea-07b2-4f4c8caea633
+# ╠═202998c7-a3ea-42e1-a9cc-dd03764bbab9
 # ╠═ff055726-f320-11ea-32f6-2bf38d7dd310
 # ╟─e0622780-f3b4-11ea-1f44-59fb9c5d2ebd
+# ╠═8d661e31-b14d-4146-b3f3-b90b1c4c67e9
 # ╠═51731519-1831-46a3-a599-d6fc2f7e4224
 # ╠═99efaf6a-0109-4b16-89b8-f8149b6b69c2
 # ╠═d3e69cf6-61b1-42fc-9abd-42d1ae7d61b2

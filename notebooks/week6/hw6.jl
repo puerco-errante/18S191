@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.14.0
+# v0.14.7
 
 using Markdown
 using InteractiveUtils
@@ -76,7 +76,13 @@ A suitable data structure for this is a **dictionary**, since it allows us to st
 function counts(data::Vector)
 	counts = Dict{Int, Int}()
 	
-	# your code here
+	for d in data
+		if haskey(counts,d)
+			counts[d]+=1
+		else
+			counts[d]=1
+		end
+	end
 	
 	return counts
 end
@@ -106,10 +112,10 @@ We are going to make a new version `counts2` where you do the following (below).
 """
 
 # ╔═╡ 4bbbbd24-d592-4ce3-a619-b7f760672b99
-
+ks=keys(test_counts)|>collect
 
 # ╔═╡ 44d0f365-b2a8-41a2-98d3-0aa34e8c80c0
-
+vs=values(test_counts)|>collect
 
 # ╔═╡ 18094d52-8c4d-11eb-0620-d30c24a8c75e
 md"""
@@ -117,7 +123,7 @@ md"""
 """
 
 # ╔═╡ c825f913-9545-4dbd-96f9-5f7621fc242d
-
+perm=sortperm(ks)
 
 # ╔═╡ 180fc1d2-8c4d-11eb-0362-230d84d47c7f
 md"""
@@ -128,10 +134,10 @@ md"""
 """
 
 # ╔═╡ fde456e5-9985-4939-af59-9b9a92313b61
-
+ks[perm]
 
 # ╔═╡ cc6923ff-09e0-44cc-9385-533182c4382d
-
+vs[perm]
 
 # ╔═╡ 18103c98-8c4d-11eb-2bed-ed20aba64ae6
 md"""
@@ -145,8 +151,11 @@ md"""
 
 # ╔═╡ 156c1bea-8c4f-11eb-3a7a-793d0a056f80
 function counts2(data::Vector)
-	
-	return missing
+	test_counts = counts(data)
+	ks=keys(test_counts)|>collect
+	vs=values(test_counts)|>collect
+	perm=sortperm(ks)
+	return (ks[perm],vs[perm])
 end
 
 # ╔═╡ 37294d02-8c4f-11eb-141e-0be49ea07611
@@ -166,8 +175,8 @@ We will use this function in the rest of the exercises.
 
 # ╔═╡ 447bc642-8c4f-11eb-1d4f-750e883b81fb
 function probability_distribution(data::Vector)
-	
-	return missing
+	ks,vs = counts2(data)
+	return (ks,vs./sum(vs))
 end
 
 # ╔═╡ 6b1dc96a-8c4f-11eb-27ca-ffba02520fec
@@ -237,7 +246,7 @@ This works, because `vegetables` is only defined as a _local variable inside the
 """
 
 # ╔═╡ d12229f4-d950-4983-84a4-304a7637ac7b
-vegetables
+fruits
 
 # ╔═╡ a8241562-8c4c-11eb-2a85-d7502e7fb2cf
 md"""
@@ -260,8 +269,8 @@ md"""
 
 # ╔═╡ 0233835a-8c50-11eb-01e7-7f80bd27683e
 function bernoulli(p::Real)
-	
-	return missing
+	r = rand()
+	return r<p
 end
 
 # ╔═╡ fdb3f1c8-8c4f-11eb-2281-bf01205bb804
@@ -273,13 +282,17 @@ md"""
 
 # ╔═╡ 08028df8-8c50-11eb-3b22-fdf5104a4d52
 function geometric(p::Real)
+	p == 0 && throw(ArgumentError("p=0 => infinite recovery time"))
+	t=1
+	while !bernoulli(p)
+		t+=1
+	end
 	
-	
-	return missing
+	return t
 end
 
 # ╔═╡ 2b35dc1c-8c50-11eb-3517-83589f2aa8cc
-geometric(0.25)
+geometric(0.0)
 
 # ╔═╡ e125bd7f-1881-4cff-810f-8af86850249d
 md"""
@@ -300,7 +313,7 @@ md"""
 
 # ╔═╡ 370ec1dc-8688-443c-bf57-dd1b2a42a5fa
 interpretation_of_p_equals_one = md"""
-blablabla
+recovers immediately
 """
 
 # ╔═╡ fdb46c72-8c4f-11eb-17a2-8b7628b5d3b3
@@ -312,7 +325,7 @@ md"""
 # ╔═╡ 32700660-8c50-11eb-2fdf-5d9401c07de3
 function experiment(p::Real, N::Integer)
 	
-	return missing
+	return [geometric(p) for _ in 1:N]
 end
 
 # ╔═╡ 192caf02-5234-4379-ad74-a95f3f249a72
@@ -342,7 +355,7 @@ md"""
 """
 
 # ╔═╡ 25ae71d0-e6e2-45ff-8900-3caf6fcea937
-
+sum(large_experiment)/length(large_experiment)
 
 # ╔═╡ 3a7c7ca2-e879-422e-a681-d7edd271c018
 md"""
@@ -354,7 +367,10 @@ Note that `vline!` requires a *vector* of values where you wish to draw vertical
 # ╔═╡ 97d7d154-8c50-11eb-2fdd-fdf0a4e402d3
 let
 	
-	# your code here
+	xs, ps = probability_distribution(large_experiment)
+	avg=sum(large_experiment)/length(large_experiment)
+	bar(xs, ps, alpha=0.5, leg=false)	
+	vline!([avg],ls=:dash)
 end
 
 # ╔═╡ b1287960-8c50-11eb-20c3-b95a2a1b8de5
@@ -398,7 +414,13 @@ md"""
 """
 
 # ╔═╡ 1b1f870f-ee4d-497f-8d4b-1dba737be075
-
+let
+	
+	xs, ps = probability_distribution(large_experiment)
+	avg=sum(large_experiment)/length(large_experiment)
+	bar(xs, ps, alpha=0.5, leg=false,yaxis = (:log10))	
+	vline!([avg],ls=:dash)
+end
 
 # ╔═╡ fdcb1c1a-8c4f-11eb-0aeb-3fae27eaacbd
 md"""
@@ -410,13 +432,19 @@ As you vary $p$, what do you observe? Does that make sense?
 """
 
 # ╔═╡ d5b29c53-baff-4529-b2c1-776afe000d38
-@bind hello Slider( 2 : 0.5 : 10 )
+@bind nn Slider( 1 : 1_000_000 )
 
 # ╔═╡ 9a92eba4-ad68-4c53-a242-734718aeb3f1
-hello
+@bind pp Slider(0.0001 : 0.001 : 1 )
 
 # ╔═╡ 48751015-c374-4a77-8a00-bca81bbc8305
-
+let
+	large_experiment = experiment(pp, nn)
+	xs, ps = probability_distribution(large_experiment)
+	avg=sum(large_experiment)/length(large_experiment)
+	bar(xs, ps, alpha=0.5, leg=false,yaxis = (:log10))	
+	vline!([avg],ls=:dash)
+end
 
 # ╔═╡ 562202be-5eac-46a4-9542-e6593bc39ff9
 
@@ -443,7 +471,10 @@ md"""
 """
 
 # ╔═╡ 406c9bfa-409d-437c-9b86-fd02fdbeb88f
-
+function mean_recovery_time(p::Real)  
+	large_experiment = experiment(p,10000)
+	sum(large_experiment)/length(large_experiment)
+end
 
 # ╔═╡ f8b982a7-7246-4ede-89c8-b2cf183470e9
 md"""
@@ -451,20 +482,20 @@ md"""
 """
 
 # ╔═╡ caafed37-0b3b-4f6c-919f-f16df7248c23
-
+ps=0.0001:0.0001:1
 
 # ╔═╡ 501bcc30-f96f-42e4-a5aa-09a4138b5b72
-
+ts=mean_recovery_time.(ps)
 
 # ╔═╡ b763b6e8-8221-4b08-9a8e-8d5e63cbd144
-
+plot(ps,ts,xaxis=(:log10),yaxis=(:log10))
 
 # ╔═╡ d2e4185e-8c51-11eb-3c31-637902456634
 md"""
 Based on my observations, it looks like we have the following relationship:
 
 ```math
-\langle \tau(p) \rangle = my \cdot answer \cdot here
+\langle \tau(p) \rangle = p^{-1}
 ```
 """
 
@@ -487,8 +518,8 @@ md"""
 
 # ╔═╡ 45735d82-8c52-11eb-3735-6ff9782dde1f
 Ps = let 
-	
-	# your code here
+	p=25/100
+	[p*(1-p)^(n-1) for n in 1:50]
 end
 
 # ╔═╡ dd80b2eb-e4c3-4b2f-ad5c-526a241ac5e6
@@ -498,7 +529,7 @@ md"""
 """
 
 # ╔═╡ 3df70c76-1aa6-4a0c-8edf-a6e3079e406b
-
+sum(Ps)
 
 # ╔═╡ b1ef5e8e-8c52-11eb-0d95-f7fa123ee3c9
 md"""
@@ -510,7 +541,7 @@ md"""
 md"""
 
 ```math
-\sum_{k=1}^{\infty} P_k = \dots your \cdot answer \cdot here \dots = 1
+\sum_{k=1}^{\infty} P_k = p\sum_{k=0}^{\infty} 1-p)^k = p \frac{1}{1 - (1-p)} = 1
 
 ```
 """
@@ -526,7 +557,14 @@ md"""
 	"""
 
 # ╔═╡ dd59f48c-bb22-47b2-8acf-9c4ee4457cb9
-
+let
+	large_experiment = experiment(pp, nn)
+	xs, ps = probability_distribution(large_experiment)
+	avg=sum(large_experiment)/length(large_experiment)
+	bar(xs, ps, alpha=0.5, leg=false,yaxis = (:log10))	
+	vline!([avg],ls=:dash)
+	plot!(xs, map(n->pp*(1-pp)^(n-1),xs))
+end
 
 # ╔═╡ 5907dc0a-de60-4b58-ac4b-1e415f0051d2
 md"""
@@ -534,7 +572,11 @@ md"""
 	"""
 
 # ╔═╡ c7093f08-52d2-4f22-9391-23bd196c6fb9
-
+let
+	large_experiment = experiment(pp, nn)
+	xs, ps = probability_distribution(large_experiment)
+	(map(n->pp*(1-pp)^(n-1),xs),ps)
+end
 
 # ╔═╡ 316f369a-c051-4a35-9c64-449b12599295
 md"""
@@ -559,8 +601,8 @@ md"""
 
 # ╔═╡ 5185c938-8c53-11eb-132d-83342e0c775f
 function cumulative_sum(xs::Vector)
-	
-	return missing
+	tot=0
+	return [tot+=x for x in xs]
 end
 
 # ╔═╡ e4095d34-552e-495d-b318-9afe6839d577
@@ -586,7 +628,7 @@ md"""
 # ╔═╡ 1ae91530-c77e-4d92-9ad3-c969bc7e1fa8
 md"""
 ```math
-C_n := \sum_{k=1}^n P_k = my \cdot answer \cdot here
+C_n := \sum_{k=1}^n P_k =1 - (1-p)^{n}
 ```
 """
 
@@ -601,7 +643,7 @@ md"""
 # ╔═╡ 16b4e98c-4ae7-4145-addf-f43a0a96ec82
 md"""
 ```math
-n(r,p) = my \cdot answer \cdot here
+n(r,p) = floor\left( \frac{log(1-r)}{log(1-p)}\right)
 ```
 """
 
@@ -615,7 +657,7 @@ md"""
 # ╔═╡ 47d56992-8c54-11eb-302a-eb3153978d26
 function geometric_bin(u::Real, p::Real)
 	
-	return missing
+	return floor(log(1-u)/log(1-p))
 end
 
 # ╔═╡ adfb343d-beb8-4576-9f2a-d53404cee42b
@@ -636,10 +678,10 @@ md"""
 """
 
 # ╔═╡ 1d007d99-2526-4c19-9c96-3fad1750670e
-
+ns=[geometric_fast(10^-10) for _ in 1:10_000]
 
 # ╔═╡ c37bbb1f-8f5e-4097-9104-43ef65aa1cbd
-
+histogram(ns)
 
 # ╔═╡ 79eb5e14-8c54-11eb-3c8c-dfeba16305b2
 md"""
@@ -660,10 +702,24 @@ md"""
 
 """
 
+# ╔═╡ abf883ca-b36b-4396-997f-745d7aea914b
+bernoulli(0.4)
+
 # ╔═╡ 2270e6ba-8c5e-11eb-3600-615519daa5e0
 function atmosphere(p::Real, y0::Real, N::Integer)
-	
-	return missing
+	walk = [y0]
+	y = y0
+	for i in 1:N
+		if bernoulli(p)
+			if y>1
+				y-=1
+			end
+		else
+			y+=1
+		end
+		push!(walk,y)
+	end
+	return walk
 end
 
 # ╔═╡ 225bbcbd-0628-4151-954e-9a85d1020fd9
@@ -679,13 +735,15 @@ Let's simulate it for $10^7$ time steps with $x_0 = 10$ and $p=0.55$.
 """
 
 # ╔═╡ deb5fbfb-1e03-42ce-a6d6-c8d3edd89a9a
-
-
-# ╔═╡ 8517f92b-d4d3-46b5-9b9a-e609175b6481
-
-
-# ╔═╡ c1e3f066-5e12-4018-9fb2-4e7fc13172ba
-
+let
+	N=10_000_000
+	ys=atmosphere(0.55, 10, N)
+	histogram(ys, normalize=:probability)
+	
+	
+	p=0.18
+	plot!(n -> p*(1-p)^(n-1),1:max(ys...))
+end
 
 # ╔═╡ 1dc68e2e-8c5e-11eb-3486-454d58ac9c87
 md"""
@@ -704,10 +762,17 @@ md"""
 """
 
 # ╔═╡ d3bec73d-0106-496d-93ae-e1e26534b8c7
-
+@bind N_atm Slider( 1 : 1_000_000_000 )
 
 # ╔═╡ d972be1f-a8ad-43ed-a90d-bca358d812c2
-
+begin
+	ys=atmosphere(0.55, 10, N_atm)
+	histogram(ys, normalize=:probability)
+	
+	
+	p=0.18
+	plot!(n -> p*(1-p)^(n-1),1:max(ys...))
+end
 
 # ╔═╡ de83ffd6-cd0c-4b78-afe4-c0bcc54471d7
 md"""
@@ -981,6 +1046,9 @@ bigbreak
 # ╔═╡ a5234680-8b02-11eb-2574-15489d0d49ea
 bigbreak
 
+# ╔═╡ 59fb5ba2-d175-4309-8b0e-b0ec9024d0dc
+
+
 # ╔═╡ 2962c6da-feda-4d65-918b-d3b178a18fa0
 begin
 	fruits = ["🍒", "🍐", "🍋"]
@@ -1121,12 +1189,11 @@ end
 # ╟─94053b41-4a06-435d-a91a-9dfa9655937c
 # ╟─79eb5e14-8c54-11eb-3c8c-dfeba16305b2
 # ╟─8c9c217e-8c54-11eb-07f1-c5fde6aa2946
+# ╠═abf883ca-b36b-4396-997f-745d7aea914b
 # ╠═2270e6ba-8c5e-11eb-3600-615519daa5e0
 # ╠═225bbcbd-0628-4151-954e-9a85d1020fd9
 # ╟─1dc5daa6-8c5e-11eb-1355-b1f627d04a18
 # ╠═deb5fbfb-1e03-42ce-a6d6-c8d3edd89a9a
-# ╠═8517f92b-d4d3-46b5-9b9a-e609175b6481
-# ╠═c1e3f066-5e12-4018-9fb2-4e7fc13172ba
 # ╟─1dc68e2e-8c5e-11eb-3486-454d58ac9c87
 # ╠═bb8f69fd-c704-41ca-9328-6622d390f71f
 # ╟─1dc7389c-8c5e-11eb-123a-7f59dc6504cf
@@ -1145,3 +1212,4 @@ end
 # ╟─5dca2bb3-24e6-49ae-a6fc-d3912da4f82a
 # ╟─ddf2a828-7823-4fc0-b944-72b60b391247
 # ╟─a7feaaa4-618b-4afe-8050-4bf7cc609c17
+# ╠═59fb5ba2-d175-4309-8b0e-b0ec9024d0dc
