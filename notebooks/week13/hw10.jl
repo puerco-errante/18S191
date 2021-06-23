@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.14.5
+# v0.14.7
 
 using Markdown
 using InteractiveUtils
@@ -206,8 +206,7 @@ md"""
 
 # ╔═╡ a86f13de-259d-11eb-3f46-1f6fb40020ce
 observations_from_changing_B = md"""
-Hello world!
-"""
+It takes longer for the eq. value to be attained (and it's bigger)."""
 
 # ╔═╡ 3d66bd30-259d-11eb-2694-471fb3a4a7be
 md"""
@@ -216,7 +215,7 @@ md"""
 
 # ╔═╡ 5f82dec8-259e-11eb-2f4f-4d661f44ef41
 observations_from_nonnegative_B = md"""
-Hello world!
+The final temperature diverges
 """
 
 # ╔═╡ 56b68356-2601-11eb-39a9-5f4b8e580b87
@@ -235,7 +234,19 @@ md"""
 """
 
 # ╔═╡ b9f882d8-266b-11eb-2998-75d6539088c7
+let
 
+	
+	# the definition of A depends on B, so we recalculate:
+	A = Model.S*(1. - Model.α)/4 + B_slider*Model.T0
+	# create the model
+
+	Bs = -3:0.001:-0.1
+	ecss = -1*log(2.)./Bs
+	plot( Bs, ecss,
+		ls=:dash, color=:darkred, label="ECS")
+
+end |> as_svg
 
 # ╔═╡ 269200ec-259f-11eb-353b-0b73523ef71a
 md"""
@@ -252,13 +263,6 @@ The CO₂ concentrations in the _future_ depend on human action. There are sever
 md"""
 👉 In what year are we expected to have doubled the CO₂ concentration, under policy scenario RCP8.5?
 """
-
-# ╔═╡ 50ea30ba-25a1-11eb-05d8-b3d579f85652
-expected_double_CO2_year = let
-	
-	
-	missing
-end
 
 # ╔═╡ bade1372-25a1-11eb-35f4-4b43d4e8d156
 md"""
@@ -324,13 +328,16 @@ md"""
 """
 
 # ╔═╡ 3d72ab3a-2689-11eb-360d-9b3d829b78a9
-ECS_samples = missing
+ECS_samples = map(x->ECS(B=x),B_samples)
+
+# ╔═╡ c4aebbfb-11b5-4fec-a1e1-3dd49f97e133
+ECS
 
 # ╔═╡ b6d7a362-1fc8-11eb-03bc-89464b55c6fc
 md"**Answer:**"
 
 # ╔═╡ 1f148d9a-1fc8-11eb-158e-9d784e390b24
-
+histogram(ECS_samples, size=(600, 250), label=nothing, xlabel="K", ylabel="samples")
 
 # ╔═╡ cf8dca6c-1fc8-11eb-1f89-099e6ba53c22
 md"It looks like the ECS distribution is **not normally distributed**, even though $B$ is. 
@@ -339,15 +346,20 @@ md"It looks like the ECS distribution is **not normally distributed**, even thou
 "
 
 # ╔═╡ 02173c7a-2695-11eb-251c-65efb5b4a45f
+ECS_Bbar = ECS()
 
+# ╔═╡ ed0ea39e-b0ee-4c5f-b6cd-2cde471ec7d5
+ECS_bar=mean(ECS_samples)
+
+# ╔═╡ cd92c9bb-0ee3-4b6c-8d90-7d00a9bed83a
+sum(x > ECS_Bbar for x in ECS_samples)/length(ECS_samples)
 
 # ╔═╡ 440271b6-25e8-11eb-26ce-1b80aa176aca
 md"👉 Does accounting for uncertainty in feedbacks make our expectation of global warming better (less implied warming) or worse (more implied warming)?"
 
 # ╔═╡ cf276892-25e7-11eb-38f0-03f75c90dd9e
 observations_from_the_order_of_averaging = md"""
-Hello world!
-"""
+It's more likely that ECS(B) is smaller than our estimate. That makes our expectation better."""
 
 # ╔═╡ 5b5f25f0-266c-11eb-25d4-17e411c850c9
 md"""
@@ -423,6 +435,9 @@ simulated_model = let
 	ebm
 end
 
+# ╔═╡ 8ba49544-39d6-4e03-85c4-316764c37ff0
+simulated_model.T
+
 # ╔═╡ 12cbbab0-2671-11eb-2b1f-038c206e84ce
 md"""
 Again, look inside `simulated_model` and notice that `T` and `t` have accumulated the simulation results.
@@ -434,8 +449,10 @@ In this simulation, we used `T0 = 14` and `CO2 = t -> 280`, which is why `T` is 
 
 # ╔═╡ 9596c2dc-2671-11eb-36b9-c1af7e5f1089
 simulated_rcp85_model = let
+	ebm = Model.EBM(14.0, 1850, 1, t ->Model.CO2_RCP85(t))
+	Model.run!(ebm, 2020)
+	ebm
 	
-	missing
 end
 
 # ╔═╡ f94a1d56-2671-11eb-2cdc-810a9c7a8a5f
@@ -458,8 +475,9 @@ md"""
 
 # ╔═╡ f688f9f2-2671-11eb-1d71-a57c9817433f
 function temperature_response(CO2::Function, B::Float64=-1.3)
-	
-	return missing
+	ebm = Model.EBM(14.0, 1850, 1, CO2; B = B)
+	Model.run!(ebm, 2100)
+	return ebm.T[end]
 end
 
 # ╔═╡ 049a866e-2672-11eb-29f7-bfea7ad8f572
@@ -469,7 +487,7 @@ temperature_response(t -> 280)
 temperature_response(Model.CO2_RCP85)
 
 # ╔═╡ aea0d0b4-2672-11eb-231e-395c863827d3
-temperature_response(Model.CO2_RCP85, -1.0)
+temperature_response(Model.CO2_RCP85, -1.8)
 
 # ╔═╡ 9c32db5c-1fc9-11eb-029a-d5d554de1067
 md"""#### Exercise 1.6 - _Application to policy relevant questions_
@@ -483,6 +501,14 @@ t = 1850:2100
 # ╔═╡ e10a9b70-25a0-11eb-2aed-17ed8221c208
 plot(t, Model.CO2_RCP85.(t), 
 	ylim=(0,1200), ylabel="CO2 concentration [ppm]")
+
+# ╔═╡ 50ea30ba-25a1-11eb-05d8-b3d579f85652
+expected_double_CO2_year = let
+	
+	
+	 doubling_index = findfirst(Model.CO2_RCP85.(t) .>= (280*2))
+	t[doubling_index]
+end
 
 # ╔═╡ 40f1e7d8-252d-11eb-0549-49ca4e806e16
 @bind t_scenario_test Slider(t; show_value=true, default=1850)
@@ -499,7 +525,14 @@ We are interested in how the **uncertainty in our input** $B$ (the climate feedb
 """
 
 # ╔═╡ f2e55166-25ff-11eb-0297-796e97c62b07
+over2_RCP26 = let 
+	sum(temperature_response(Model.CO2_RCP26, x) > 14 for x in B_samples)/length(B_samples)
+end
 
+# ╔═╡ 40729629-20a6-4a57-a005-f006086a24aa
+over2_RCP85 = let 
+	sum(temperature_response(Model.CO2_RCP85, x) > 14 for x in B_samples)/length(B_samples)
+end
 
 # ╔═╡ 1ea81214-1fca-11eb-2442-7b0b448b49d6
 md"""
@@ -760,7 +793,7 @@ TODO = html"<span style='display: inline; font-size: 2em; color: purple; font-we
 # ╟─1312525c-1fc0-11eb-2756-5bc3101d2260
 # ╠═c4398f9c-1fc4-11eb-0bbb-37f066c6027d
 # ╠═7f961bc0-1fc5-11eb-1f18-612aeff0d8df
-# ╟─25f92dec-1fc4-11eb-055d-f34deea81d0e
+# ╠═25f92dec-1fc4-11eb-055d-f34deea81d0e
 # ╟─fa7e6f7e-2434-11eb-1e61-1b1858bb0988
 # ╟─16348b6a-1fc2-11eb-0b9c-65df528db2a1
 # ╟─e296c6e8-259c-11eb-1385-53f757f4d585
@@ -782,17 +815,21 @@ TODO = html"<span style='display: inline; font-size: 2em; color: purple; font-we
 # ╠═49cb5174-1fc3-11eb-3670-c3868c9b0255
 # ╟─f3abc83c-1fc7-11eb-1aa8-01ce67c8bdde
 # ╠═3d72ab3a-2689-11eb-360d-9b3d829b78a9
+# ╠═c4aebbfb-11b5-4fec-a1e1-3dd49f97e133
 # ╟─b6d7a362-1fc8-11eb-03bc-89464b55c6fc
 # ╠═1f148d9a-1fc8-11eb-158e-9d784e390b24
 # ╟─cf8dca6c-1fc8-11eb-1f89-099e6ba53c22
 # ╠═02173c7a-2695-11eb-251c-65efb5b4a45f
+# ╠═ed0ea39e-b0ee-4c5f-b6cd-2cde471ec7d5
+# ╠═cd92c9bb-0ee3-4b6c-8d90-7d00a9bed83a
 # ╟─440271b6-25e8-11eb-26ce-1b80aa176aca
 # ╠═cf276892-25e7-11eb-38f0-03f75c90dd9e
 # ╟─5b5f25f0-266c-11eb-25d4-17e411c850c9
-# ╟─3f823490-266d-11eb-1ba4-d5a23975c335
+# ╠═3f823490-266d-11eb-1ba4-d5a23975c335
 # ╟─971f401e-266c-11eb-3104-171ae299ef70
 # ╠═746aa5bc-266c-11eb-14c9-63ccc313f5de
 # ╟─a919d584-2670-11eb-1cf9-2327c8135d6d
+# ╠═8ba49544-39d6-4e03-85c4-316764c37ff0
 # ╠═bfb07a0a-2670-11eb-3938-772499c637b1
 # ╟─12cbbab0-2671-11eb-2b1f-038c206e84ce
 # ╠═9596c2dc-2671-11eb-36b9-c1af7e5f1089
@@ -809,6 +846,7 @@ TODO = html"<span style='display: inline; font-size: 2em; color: purple; font-we
 # ╟─ee1be5dc-252b-11eb-0865-291aa823b9e9
 # ╟─06c5139e-252d-11eb-2645-8b324b24c405
 # ╠═f2e55166-25ff-11eb-0297-796e97c62b07
+# ╠═40729629-20a6-4a57-a005-f006086a24aa
 # ╟─1ea81214-1fca-11eb-2442-7b0b448b49d6
 # ╟─a0ef04b0-25e9-11eb-1110-cde93601f712
 # ╟─3e310cf8-25ec-11eb-07da-cb4a2c71ae34
